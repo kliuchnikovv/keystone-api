@@ -2,7 +2,11 @@ package sidecar
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
+	"net"
 	"sync"
+	"syscall"
 )
 
 // ResumeResult is what a sender reports when asked to replay (spec §10).
@@ -101,7 +105,31 @@ func (p *Publisher) Publish(topic Topic, payload any) error {
 	if p.enc == nil {
 		return ErrNotConnected
 	}
-	return p.enc.Encode(&frame)
+	return asNotConnected(p.enc.Encode(&frame))
+}
+
+// asNotConnected translates a write against a dead connection into
+// ErrNotConnected.
+//
+// Callers branch on ErrNotConnected — it is what IsRetryable keys on, and what
+// tells them the operation did not happen rather than failed. Leaking a raw
+// "use of closed network connection" past that boundary makes a routine
+// reconnect look like an unclassified I/O failure, and callers end up matching
+// on the message text.
+//
+// There is a window where this matters: the peer's connection is closed but
+// the supervisor has not yet detached the publisher, so enc is non-nil and
+// pointing at a dead socket. The push is already in the ring buffer by then,
+// so it is replayable — ErrNotConnected is the accurate report.
+func asNotConnected(err error) error {
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, net.ErrClosed) || errors.Is(err, io.ErrClosedPipe) ||
+		errors.Is(err, syscall.EPIPE) || errors.Is(err, syscall.ECONNRESET) {
+		return ErrNotConnected
+	}
+	return err
 }
 
 // SetFilters replaces the subscription filter set (spec §8.2).
@@ -162,7 +190,7 @@ func (p *Publisher) Resume(sinceSeq uint64) (ResumeResult, error) {
 		return res, ErrNotConnected
 	}
 	for i := range frames {
-		if err := p.enc.Encode(&frames[i]); err != nil {
+		if err := asNotConnected(p.enc.Encode(&frames[i])); err != nil {
 			return res, err
 		}
 	}

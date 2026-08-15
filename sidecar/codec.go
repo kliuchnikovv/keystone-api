@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 )
 
 // DefaultMaxLineBytes bounds a single frame.
@@ -150,10 +151,53 @@ type Encoder struct {
 	// Reused between frames. Encoding happens on every push, and the buffer is
 	// already serialised by the mutex.
 	buf bytes.Buffer
+
+	timeout  time.Duration
+	deadline deadlineSetter
+}
+
+// deadlineSetter is the part of net.Conn we need to bound a write.
+type deadlineSetter interface {
+	SetWriteDeadline(t time.Time) error
+}
+
+// DefaultWriteTimeout bounds a single frame write.
+//
+// Without a bound, writing to a peer that has stopped reading blocks forever:
+// the socket buffer fills, Write parks, and no context can interrupt it
+// because a blocked syscall does not observe one. Worse, the blocked writer
+// holds the encoder's mutex, so every response, push and heartbeat queues
+// behind it — the connection is dead and nothing notices, which is precisely
+// the failure the heartbeat exists to catch.
+//
+// Thirty seconds is generous: it is the same order as the pong deadline, so a
+// peer slow enough to trip this is already failing its heartbeat.
+const DefaultWriteTimeout = 30 * time.Second
+
+// EncoderOption configures an Encoder.
+type EncoderOption func(*Encoder)
+
+// WithWriteTimeout overrides DefaultWriteTimeout. Has no effect on a writer
+// that cannot set deadlines.
+func WithWriteTimeout(d time.Duration) EncoderOption {
+	return func(e *Encoder) {
+		if d > 0 {
+			e.timeout = d
+		}
+	}
 }
 
 // NewEncoder wraps a writer.
-func NewEncoder(w io.Writer) *Encoder { return &Encoder{w: w} }
+func NewEncoder(w io.Writer, opts ...EncoderOption) *Encoder {
+	e := &Encoder{w: w, timeout: DefaultWriteTimeout}
+	if ds, ok := w.(deadlineSetter); ok {
+		e.deadline = ds
+	}
+	for _, o := range opts {
+		o(e)
+	}
+	return e
+}
 
 // Encode marshals and writes a frame followed by a newline.
 func (e *Encoder) Encode(f *Frame) error {
@@ -168,6 +212,15 @@ func (e *Encoder) Encode(f *Frame) error {
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(f); err != nil {
 		return fmt.Errorf("sidecar: encoding %s: %w", f, err)
+	}
+
+	if e.deadline != nil {
+		if err := e.deadline.SetWriteDeadline(time.Now().Add(e.timeout)); err != nil {
+			return err
+		}
+		// Clear it afterwards so an idle connection is not sitting on an
+		// expired deadline that would fail the next write immediately.
+		defer func() { _ = e.deadline.SetWriteDeadline(time.Time{}) }()
 	}
 
 	// json.Encoder.Encode already appended the newline.

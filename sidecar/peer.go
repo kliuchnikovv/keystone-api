@@ -49,6 +49,11 @@ type Options struct {
 	// MaxLineBytes defaults to DefaultMaxLineBytes.
 	MaxLineBytes int
 
+	// WriteTimeout bounds a single frame write. Defaults to
+	// DefaultWriteTimeout. Only takes effect on a connection that supports
+	// deadlines, which every net.Conn does.
+	WriteTimeout time.Duration
+
 	// HandlerLimit defaults to DefaultHandlerLimit.
 	HandlerLimit int
 
@@ -70,6 +75,9 @@ func (o *Options) withDefaults() {
 	}
 	if o.HandlerLimit <= 0 {
 		o.HandlerLimit = DefaultHandlerLimit
+	}
+	if o.WriteTimeout <= 0 {
+		o.WriteTimeout = DefaultWriteTimeout
 	}
 	if o.Clock == nil {
 		o.Clock = SystemClock{}
@@ -128,7 +136,7 @@ func NewPeer(conn io.ReadWriteCloser, opts Options) *Peer {
 
 	p := &Peer{
 		conn:         conn,
-		enc:          NewEncoder(conn),
+		enc:          NewEncoder(conn, WithWriteTimeout(opts.WriteTimeout)),
 		dec:          NewDecoder(conn, WithMaxLineBytes(opts.MaxLineBytes)),
 		opts:         opts,
 		log:          opts.Logger,
@@ -365,7 +373,7 @@ func (p *Peer) Call(ctx context.Context, method string, params, result any) erro
 		}
 		frame.Params = raw
 	}
-	if err := p.enc.Encode(&frame); err != nil {
+	if err := asNotConnected(p.enc.Encode(&frame)); err != nil {
 		if p.isClosed() {
 			return ErrNotConnected
 		}
@@ -379,15 +387,7 @@ func (p *Peer) Call(ctx context.Context, method string, params, result any) erro
 	case <-p.done:
 		return ErrNotConnected
 
-	case resp, ok := <-reply:
-		if !ok {
-			// The channel was closed by teardown: the connection went away
-			// before a reply arrived. Distinguishing this from a real reply is
-			// the reason teardown closes the channels rather than just
-			// dropping them — otherwise every in-flight Call would block until
-			// its own timeout, tens of seconds after we already knew.
-			return ErrNotConnected
-		}
+	case resp := <-reply:
 		if resp.Error != nil {
 			return resp.Error
 		}
@@ -417,15 +417,16 @@ func (p *Peer) teardown() {
 		close(p.done)
 		_ = p.conn.Close()
 
-		// Wake every in-flight Call. No more replies are coming on this
-		// connection, and leaving them to time out individually would keep
-		// callers blocked for up to CallTimeout after we already knew the
-		// answer was never arriving.
+		// Every in-flight Call is already selecting on p.done, so closing the
+		// channel above is what wakes them — immediately, rather than each
+		// waiting out its own CallTimeout.
+		//
+		// The pending entries are dropped but deliberately NOT closed. Closing
+		// a channel that route may be sending on at that instant is a data
+		// race, and it buys nothing: done is the signal, and each Call removes
+		// its own entry on the way out.
 		p.pendingMu.Lock()
-		for id, ch := range p.pending {
-			close(ch)
-			delete(p.pending, id)
-		}
+		clear(p.pending)
 		p.pendingMu.Unlock()
 	})
 }
