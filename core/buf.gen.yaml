@@ -1,0 +1,27 @@
+version: v2
+# Two language outputs from one set of definitions.
+#
+# The Go stubs are what keystone's gRPC server implements; the TypeScript ones
+# are what its web UI consumes. Generating both here rather than in each
+# consumer is the point of hosting the protos in a contract repository — the UI
+# previously reached across the tree with `inputs: [directory: ../../proto]`,
+# which only worked because it lived in the same checkout.
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: gen/go
+    opt: paths=source_relative
+
+  - remote: buf.build/grpc/go
+    out: gen/go
+    opt:
+      - paths=source_relative
+      - require_unimplemented_servers=false
+
+  - remote: buf.build/community/stephenh-ts-proto
+    out: gen/ts
+    opt:
+      - esModuleInterop=true
+      - outputServices=false
+      - useOptionals=messages
+      - snakeToCamel=true
+      - unrecognizedEnum=false

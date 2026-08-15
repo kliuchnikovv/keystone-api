@@ -1,0 +1,27 @@
+version: v2
+modules:
+  - path: proto
+
+lint:
+  use:
+    - STANDARD
+  except:
+    # These rules are stylistic, and the API they would rename is already
+    # published and served. Satisfying them means renaming every request and
+    # response message — ListDevicesRequest to ListRequest, and so on — which
+    # breaks every generated client for no behavioural gain. That is a v2
+    # decision, not a lint fix.
+    #
+    # They are listed individually rather than dropping to BASIC so the rest of
+    # STANDARD stays on: the rules that catch real mistakes, like package and
+    # directory agreement, remain enforced.
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    # google.protobuf.Empty is deliberately reused by the many RPCs that return
+    # nothing. The alternative is a dozen empty message types whose only
+    # purpose is to satisfy a uniqueness rule.
+    - RPC_REQUEST_RESPONSE_UNIQUE
+
+breaking:
+  use:
+    - FILE
