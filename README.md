@@ -100,6 +100,13 @@ make conformance      # Go peer <-> TS peer over a real unix socket
 workspace hides missing `go.mod` requirements, so a green build inside it says
 nothing about whether a consumer can `go get` the module.
 
+## Adopting this in keystone
+
+[MIGRATING-KEYSTONE.md](./MIGRATING-KEYSTONE.md) covers what changes on the
+other side: which parts of the Matter adapter are superseded, which move, the
+two protocol gaps that block extracting Matter entirely, and the proto import
+rewrite.
+
 ## Reference
 
 The normative prose specification is
