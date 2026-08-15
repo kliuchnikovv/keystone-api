@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/lifecycle.json",
+  "title": "lifecycle.<deviceRef>.<online|offline|removed>",
+  "description": "A device appeared, went away, or was removed from the transport by something other than us.\n\n`removed` is distinct from a `decommission` we asked for: it means the device left on its own or a peer controller evicted it, and the core must reconcile its registry rather than assume its own view is current.",
+  "type": "object",
+  "required": ["deviceRef"],
+  "properties": {
+    "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+    "reason": {
+      "title": "Why",
+      "description": "Free-form but conventional: `session_active`, `session_timeout`, `removed_by_peer`, `unreachable`, `fabric_removed`.",
+      "type": "string",
+      "maxLength": 128
+    },
+    "device": {
+      "$ref": "../objects/device.json#/$defs/discoveredDevice",
+      "description": "Carried on `online` for a device the core has not seen before, so it need not follow up with a discover."
+    }
+  },
+  "additionalProperties": false
+}

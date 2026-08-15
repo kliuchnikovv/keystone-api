@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/setConfig.json",
+  "title": "setConfig",
+  "description": "Apply a new configuration.\n\nThe plugin validates first and answers `validation.bad_params` without applying anything if the config is wrong — a half-applied config is worse than a rejected one.\n\nWhether this can be done live depends on the `config.reload` capability. Without it the plugin answers `restartRequired: true` and the core schedules a restart.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["config"],
+      "properties": {
+        "config": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "restartRequired": {
+          "description": "The config was accepted and stored but will not take effect until the plugin restarts.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

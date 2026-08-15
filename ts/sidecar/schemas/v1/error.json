@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/error.json",
+  "title": "Error",
+  "description": "Structured error carried in a response frame (spec §9).",
+  "type": "object",
+  "required": ["code", "message"],
+  "properties": {
+    "code": {
+      "$ref": "common.json#/$defs/errorCode"
+    },
+    "message": {
+      "title": "Human-readable detail",
+      "description": "Shown to operators and in logs. Not parsed; put anything a caller needs to branch on in `code` or `details`.",
+      "type": "string",
+      "maxLength": 4096
+    },
+    "retryable": {
+      "title": "Whether retrying may succeed",
+      "description": "Deliberately NOT required.\n\nRetryability is a property of the code (§9.1), and the receiver is expected to fall back to the taxonomy default when the field is absent. Making it required would mean a sender that omits it produces a hard failure; making it default to `false` in the parser would be worse still — every omitted `device.offline` would become non-retryable and the core would stop waking sleeping devices.\n\nSenders should set it explicitly. Receivers must tolerate its absence.",
+      "type": "boolean"
+    },
+    "details": {
+      "title": "Machine-readable context",
+      "description": "Free-form. Conventionally carries the identifiers that failed, e.g. `{\"deviceRef\": \"matter:3\"}`.",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

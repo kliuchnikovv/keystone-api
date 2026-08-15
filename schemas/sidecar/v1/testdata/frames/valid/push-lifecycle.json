@@ -1,0 +1,1 @@
+{"type":"push","topic":"lifecycle.matter:3.offline","seq":5,"ts":"2026-08-15T21:04:14.001Z","payload":{"deviceRef":"matter:3","reason":"session_timeout"}}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/commission.json",
+  "title": "commission",
+  "description": "Add a new device to the transport — pair, join, adopt.\n\nCommissioning is slow and multi-stage, so the plugin should report progress as `commissioning.<sessionId>.progress` pushes while this call is outstanding rather than leaving the user watching a spinner. The core supplies `sessionId` so it can correlate the two before the result arrives.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "$ref": "../objects/configFlowStep.json#/$defs/sessionId",
+          "description": "Topic scope for progress pushes. Absent means the caller does not want progress."
+        },
+        "payload": {
+          "description": "Setup code or QR payload, e.g. a Matter `MT:...` string. Absent for transports where pairing is a permit-join mode rather than a per-device operation.",
+          "type": "string",
+          "maxLength": 512
+        },
+        "target": {
+          "description": "A `ref` from discoverCommissionable, to pair one specific advertised device rather than whatever answers first.",
+          "$ref": "../common.json#/$defs/segment"
+        },
+        "network": {
+          "title": "Network credentials",
+          "description": "For transports that must hand the device a network to join — Matter Wi-Fi and Thread commissioning. Kept as an open object rather than typed fields because each transport wants different keys, and this is the one place where a wrong guess would force a v2.",
+          "type": "object"
+        },
+        "extra": {
+          "title": "Transport-specific parameters",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": ["deviceRef"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "device": {
+          "$ref": "../objects/device.json#/$defs/discoveredDevice",
+          "description": "The interviewed device, if the plugin has it to hand. Saves the core a follow-up `discover`."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

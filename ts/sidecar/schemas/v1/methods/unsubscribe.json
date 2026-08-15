@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/unsubscribe.json",
+  "title": "unsubscribe",
+  "description": "Clear the filter set entirely (spec §7.3). All or nothing — there is no per-topic removal; narrowing a subscription means re-sending `subscribe` with the filters you want to keep. See OPEN_QUESTIONS.md §8.\n\nDoes not reset `seq`. A subsequent `subscribe` continues numbering where this left off, so a `resume` across the gap still works.",
+
+  "$defs": {
+    "params": { "type": "object", "additionalProperties": false },
+    "result": {
+      "type": "object",
+      "required": ["unsubscribed"],
+      "properties": { "unsubscribed": { "const": true } },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/getHealth.json",
+  "title": "getHealth",
+  "description": "Poll the plugin's condition. The push topic `plugin.health.<component>` carries the same shape, so a plugin may report proactively instead of, or as well as, answering polls.",
+
+  "$defs": {
+    "params": { "type": "object", "additionalProperties": false },
+    "result": { "$ref": "../objects/health.json" }
+  }
+}

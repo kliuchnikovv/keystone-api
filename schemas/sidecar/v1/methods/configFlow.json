@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/configFlow.json",
+  "title": "configFlow",
+  "description": "Advance a setup wizard by one step (spec §7.4, plugin-ui-integration.md §4).\n\nThe plugin owns the flow logic; the core owns the session state and the rendering. The core calls with the step id it was told to go to next and whatever the user entered, and gets back the next screen. `step: \"init\"` with empty data starts a flow.\n\nRequires the `config.flow` capability. A plugin without it answers `feature.unsupported`, and the core falls back to rendering its flat config schema.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["step"],
+      "properties": {
+        "step": {
+          "title": "Step id",
+          "description": "`init` starts a new flow. Otherwise the `next` (or `retryStep`) of the previous step.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sessionId": {
+          "$ref": "../objects/configFlowStep.json#/$defs/sessionId",
+          "description": "Absent on the first call; the plugin mints one and returns it in the step."
+        },
+        "data": {
+          "title": "User input from the previous step",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": { "$ref": "../objects/configFlowStep.json#/$defs/step" }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/request.json",
+  "title": "Request frame",
+  "description": "Initiated by either side, expects exactly one response carrying the same `id` (spec §4.1).\n\nBoth peers may send requests at any time. There is no client and no server at this layer — see the `symmetry` note in the repository README.",
+  "type": "object",
+  "required": ["type", "id", "method"],
+  "properties": {
+    "type": { "const": "request" },
+    "id": { "$ref": "common.json#/$defs/requestId" },
+    "method": {
+      "title": "Method name",
+      "description": "See methods/index.json for the v1 inventory. An unknown method must be answered with `protocol.unsupported`, never ignored — the caller is blocked on a response.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9]*$"
+    },
+    "params": {
+      "title": "Method parameters",
+      "description": "Shape is determined by `method`. Absent is equivalent to `{}`."
+    }
+  },
+  "additionalProperties": false
+}

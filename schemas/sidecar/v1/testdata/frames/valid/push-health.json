@@ -1,0 +1,1 @@
+{"type":"push","topic":"plugin.health.controller","seq":7,"ts":"2026-08-15T21:04:16.000Z","payload":{"status":"degraded","message":"3 of 12 nodes unreachable","counters":{"peers":12,"sessions_open":9}}}

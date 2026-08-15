@@ -1,0 +1,28 @@
+{
+  "name": "@keystone/api-workspace",
+  "private": true,
+  "type": "module",
+  "description": "npm workspace root. Not published — see ts/sidecar for the package.",
+  "workspaces": [
+    "ts/sidecar"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint-schemas": "node tools/lint-schemas.mjs",
+    "gen": "node tools/sync-schemas.mjs && node tools/gen-ts-types.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "json-schema-to-typescript": "^15.0.4",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

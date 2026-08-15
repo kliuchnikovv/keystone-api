@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/objects/health.json",
+  "title": "Health status",
+  "description": "The plugin's own view of its condition. Used both as the result of `getHealth` and as the payload of `plugin.health.<component>` pushes — one definition, two references, so a poll and a push can never disagree about shape.",
+  "type": "object",
+  "required": ["status"],
+  "properties": {
+    "status": {
+      "title": "Overall condition",
+      "description": "`ok` — operating normally.\n`degraded` — still serving, but something is wrong: upstream is flaky, pushes are being dropped, a subset of devices is unreachable.\n`failing` — not serving. The core may restart the plugin.",
+      "enum": ["ok", "degraded", "failing"]
+    },
+    "message": {
+      "title": "Human-readable detail",
+      "type": "string",
+      "maxLength": 4096
+    },
+    "counters": {
+      "title": "Component counters",
+      "description": "Free-form numeric gauges — peers, open sessions, dropped pushes, queue depth. Surfaced in the UI and useful in a bug report; nothing branches on them.",
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    }
+  },
+  "additionalProperties": false
+}

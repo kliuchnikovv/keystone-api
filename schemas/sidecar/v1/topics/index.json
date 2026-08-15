@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/index.json",
+  "title": "Topic inventory",
+  "description": "Machine-readable map of topic patterns to payload schemas (spec §8).\n\nData, not a validation schema. It is what lets `validatePush(topic, payload)` work in both languages without a hand-maintained switch statement that would inevitably drift.\n\nPatterns use the same wildcard grammar as subscription filters. They are matched most-specific-first: `plugin.health.*` is tried before any broader pattern would be. A topic matching no pattern is not an error — a plugin may define its own — but it cannot be payload-validated.",
+
+  "type": "object",
+
+  "topics": [
+    {
+      "pattern": "state.*.*.*",
+      "payload": { "$ref": "state.json" },
+      "producer": "plugin",
+      "segments": ["category", "deviceRef", "feature", "stateKey"]
+    },
+    {
+      "pattern": "event.*.*",
+      "payload": { "$ref": "event.json" },
+      "producer": "plugin",
+      "segments": ["category", "deviceRef", "eventName"]
+    },
+    {
+      "pattern": "lifecycle.*.*",
+      "payload": { "$ref": "lifecycle.json" },
+      "producer": "plugin",
+      "segments": ["category", "deviceRef", "transition"],
+      "transitions": ["online", "offline", "removed"]
+    },
+    {
+      "pattern": "commissioning.*.progress",
+      "payload": { "$ref": "commissioning.json" },
+      "producer": "plugin",
+      "segments": ["category", "sessionId", "kind"]
+    },
+    {
+      "pattern": "plugin.health.*",
+      "payload": { "$ref": "plugin.health.json" },
+      "producer": "plugin",
+      "segments": ["category", "kind", "component"]
+    },
+    {
+      "pattern": "plugin.log.*",
+      "payload": { "$ref": "plugin.log.json" },
+      "producer": "plugin",
+      "segments": ["category", "kind", "level"],
+      "levels": ["debug", "info", "warn", "error"]
+    },
+    {
+      "pattern": "plugin.metrics",
+      "payload": { "$ref": "plugin.metrics.json" },
+      "producer": "plugin",
+      "segments": ["category", "kind"]
+    }
+  ]
+}

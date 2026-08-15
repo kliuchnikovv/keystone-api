@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/push.json",
+  "title": "Push frame",
+  "description": "Asynchronous, unacknowledged message (spec §4.3). Nothing is sent back and no `id` is involved.\n\n`seq` numbers only the pushes that were actually written to this stream. Pushes filtered out by the receiver's subscription are never numbered — numbering them would leave permanent gaps for topics the receiver never asked for, which would destroy the gap-detection signal in §10.2.",
+  "type": "object",
+  "required": ["type", "topic", "seq", "ts"],
+  "properties": {
+    "type": { "const": "push" },
+    "topic": { "$ref": "common.json#/$defs/topic" },
+    "seq": { "$ref": "common.json#/$defs/seq" },
+    "ts": {
+      "$ref": "common.json#/$defs/isoTime",
+      "description": "When the event occurred, not when it was serialised. A replayed push keeps its original timestamp."
+    },
+    "payload": {
+      "title": "Topic payload",
+      "description": "Shape is determined by `topic` — see topics/index.json."
+    }
+  },
+  "additionalProperties": false
+}

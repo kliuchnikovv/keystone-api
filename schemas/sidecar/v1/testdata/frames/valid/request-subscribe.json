@@ -1,0 +1,1 @@
+{"type":"request","id":"7","method":"subscribe","params":{"topics":["state.**","event.matter:3.*","lifecycle.**","plugin.log.error"]}}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/discover.json",
+  "title": "discover",
+  "description": "List the devices this transport can already use.\n\nDistinct from `discoverCommissionable`, which finds devices that are not yet paired to anything. `discover` is a full snapshot and is safe to call at any time — the core uses it to re-sync after a `seq` gap (spec §10.2).",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "properties": {
+        "refresh": {
+          "description": "Ask the transport to re-interview devices rather than answer from cache. Slower, and may wake battery-powered devices.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "array",
+      "items": { "$ref": "../objects/device.json#/$defs/discoveredDevice" }
+    }
+  }
+}

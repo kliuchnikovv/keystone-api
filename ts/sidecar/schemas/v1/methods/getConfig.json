@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/getConfig.json",
+  "title": "getConfig",
+  "description": "Read the plugin's current configuration.\n\nSecrets must come back redacted or omitted. The core stores configuration on the plugin's behalf and has no need to read a password back out; a plugin that echoes one has leaked it into the core's logs.",
+
+  "$defs": {
+    "params": { "type": "object", "additionalProperties": false },
+    "result": {
+      "type": "object",
+      "required": ["config"],
+      "properties": {
+        "config": { "type": "object" },
+        "schema": {
+          "title": "JSON Schema for the config",
+          "description": "Lets the core render a settings form without reading plugin.yaml. Optional — the manifest remains the authoritative copy.",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

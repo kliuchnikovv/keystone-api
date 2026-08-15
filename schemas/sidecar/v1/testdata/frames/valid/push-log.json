@@ -1,0 +1,1 @@
+{"type":"push","topic":"plugin.log.error","seq":8,"ts":"2026-08-15T21:04:17.000Z","payload":{"message":"attribute decode failed","logger":"controller","fields":{"nodeId":3,"cluster":"OnOff"}}}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/writeState.json",
+  "title": "writeState",
+  "description": "Request a change to a settable attribute.\n\nThe response means the transport accepted the write, not that the device has settled on the new value. The authoritative confirmation is the `state.*` push that follows, with `origin: user_write`.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["deviceRef", "feature", "key", "value"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "feature": { "$ref": "../common.json#/$defs/featureKey" },
+        "key": { "$ref": "../common.json#/$defs/stateKey" },
+        "value": { "description": "Any JSON type; the feature decides." }
+      },
+      "additionalProperties": false
+    },
+    "result": { "type": "object", "additionalProperties": false }
+  }
+}

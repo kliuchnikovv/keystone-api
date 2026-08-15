@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/objects/device.json",
+  "title": "Device shapes",
+  "description": "Wire forms of the device model. These must round-trip keystone's ports.DiscoveredDevice and domain.Feature without loss — the core's ingress code maps between them directly.",
+
+  "$defs": {
+    "feature": {
+      "title": "Feature",
+      "description": "A functional module of a device — the unit a rule or the UI talks to. One RGB bulb has several: `onoff`, `brightness`, `color`, `color_temp`. Modelled on Matter clusters but transport-independent.",
+      "type": "object",
+      "required": ["key"],
+      "properties": {
+        "key": { "$ref": "../common.json#/$defs/featureKey" },
+        "states": {
+          "title": "Readable attributes",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "../common.json#/$defs/stateKey" }
+        },
+        "actions": {
+          "title": "Invokable commands",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "../common.json#/$defs/actionKey" }
+        },
+        "events": {
+          "title": "Emitted events",
+          "description": "Events have no persistent value — a button press is an event, the button's battery level is a state.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "../common.json#/$defs/eventKey" }
+        },
+        "config": {
+          "title": "Feature configuration",
+          "description": "Static per-feature parameters the core needs in order to interpret values — ranges, units, supported modes. Free-form; the core passes what it does not understand through to the UI.",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "discoveredDevice": {
+      "title": "Discovered device",
+      "description": "A device the transport can already use. The core decides separately whether to admit it to the registry.",
+      "type": "object",
+      "required": ["deviceRef", "type"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "type": { "$ref": "../common.json#/$defs/deviceType" },
+        "name": {
+          "title": "Device-reported name",
+          "description": "Often empty. The core prefers the user's own label when one exists.",
+          "type": "string",
+          "maxLength": 256
+        },
+        "manufacturer": { "type": "string", "maxLength": 128 },
+        "model": { "type": "string", "maxLength": 128 },
+        "features": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/feature" }
+        },
+        "metadata": {
+          "title": "Transport-specific detail",
+          "description": "Opaque string map — firmware version, endpoint numbers, vendor ids. Carried through to the UI and diagnostics.",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "commissionableDevice": {
+      "title": "Commissionable device",
+      "description": "A device advertising itself as ready to pair but not yet in any fabric. Everything here comes from the advertisement — the device has not been interviewed, so there are no features and no state.\n\nDiscovery does not remove the need for a setup code: the passcode is never advertised. It only spares the user from working out which device is which.",
+      "type": "object",
+      "required": ["ref"],
+      "properties": {
+        "ref": {
+          "title": "Advertisement reference",
+          "description": "Pass back in `commission.target` to pair this exact device.",
+          "$ref": "../common.json#/$defs/segment"
+        },
+        "name": { "type": "string", "maxLength": 256 },
+        "type": { "$ref": "../common.json#/$defs/deviceType" },
+        "vendorId": { "type": "integer" },
+        "productId": { "type": "integer" },
+        "discriminator": {
+          "title": "Long discriminator",
+          "description": "Matches the digits printed next to the device's QR code, so the UI can tell two identical bulbs apart.",
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "stateValue": {
+      "title": "State value",
+      "description": "A single attribute reading. `value` may be any JSON type — bool, number, string, or a structured object for compound attributes like colour.",
+      "type": "object",
+      "required": ["value"],
+      "properties": {
+        "value": {},
+        "unit": {
+          "title": "Unit of measurement",
+          "description": "Free-form but conventional: `celsius`, `percent`, `watts`, `lux`, `ppm`, `seconds`. Absent means dimensionless.",
+          "type": "string",
+          "maxLength": 32
+        },
+        "origin": { "$ref": "../common.json#/$defs/origin" },
+        "confidence": {
+          "title": "Confidence",
+          "description": "0..1, for values a plugin inferred rather than measured. Absent means certain.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "attrRef": {
+      "title": "Attribute reference",
+      "description": "Addresses one attribute: which device, which feature, which key.",
+      "type": "object",
+      "required": ["deviceRef", "feature", "key"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "feature": { "$ref": "../common.json#/$defs/featureKey" },
+        "key": { "$ref": "../common.json#/$defs/stateKey" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

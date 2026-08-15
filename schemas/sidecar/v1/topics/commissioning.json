@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/commissioning.json",
+  "title": "commissioning.<sessionId>.progress",
+  "description": "Progress of an in-flight `commission` call or config flow.\n\nCommissioning takes tens of seconds and passes through stages the user can act on — \"press the button\", \"joining network\". Without this the UI shows an indeterminate spinner and the user cannot tell a slow pairing from a hung one.",
+  "type": "object",
+  "required": ["stage"],
+  "properties": {
+    "stage": {
+      "title": "Machine-readable stage",
+      "description": "Transport-specific. Matter's sequence runs roughly: `discovered`, `pase_established`, `attestation`, `credentials`, `network_join`, `operational`, `interviewed`.",
+      "type": "string",
+      "maxLength": 64
+    },
+    "message": {
+      "title": "Human-readable detail",
+      "type": "string",
+      "maxLength": 512
+    },
+    "progress": {
+      "title": "Fraction complete",
+      "description": "0..1. Absent when the plugin cannot estimate, which is honest and better than a fabricated number.",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "deviceRef": {
+      "$ref": "../common.json#/$defs/deviceRef",
+      "description": "Available only once the device has an identity — not on early stages."
+    }
+  },
+  "additionalProperties": false
+}

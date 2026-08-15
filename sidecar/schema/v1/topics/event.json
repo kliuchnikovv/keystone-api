@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/event.json",
+  "title": "event.<deviceRef>.<eventName>",
+  "description": "Something happened that has no persistent value — a button was pressed, motion was detected, an alarm self-tested.\n\nUnlike state, events must not be coalesced: two button presses are two facts, and dropping one loses information that cannot be recovered by reading the device.",
+  "type": "object",
+  "properties": {
+    "data": {
+      "title": "Event-specific detail",
+      "description": "Free-form. A multi-press carries its count, a motion event may carry a zone.",
+      "type": "object"
+    },
+    "feature": {
+      "$ref": "../common.json#/$defs/featureKey",
+      "description": "Which feature emitted it. Present when a device has several features that can emit the same event name."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/shutdown.json",
+  "title": "shutdown",
+  "description": "Graceful stop request (spec §6.2). The plugin should finish in-flight work and close the socket before `deadline`. After it, the core sends SIGTERM and then SIGKILL.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["deadline"],
+      "properties": {
+        "deadline": {
+          "$ref": "../common.json#/$defs/isoTime",
+          "description": "Absolute, not a duration — a duration would start counting from whenever the plugin got round to reading the frame, which is exactly the case where the deadline matters."
+        },
+        "reason": {
+          "description": "Why the core is stopping the plugin: `restart`, `upgrade`, `disable`, `core_shutdown`. Advisory; a plugin might use it to decide whether to persist state.",
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": { "type": "object", "additionalProperties": false }
+  }
+}

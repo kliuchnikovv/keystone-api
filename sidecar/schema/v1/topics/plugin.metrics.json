@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/plugin.metrics.json",
+  "title": "plugin.metrics",
+  "description": "Periodic numeric telemetry. Deliberately thin — this is not a metrics system, it is enough to render a plugin's detail page and to make a bug report useful.",
+  "type": "object",
+  "required": ["metrics"],
+  "properties": {
+    "metrics": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "intervalSeconds": {
+      "description": "How often this is emitted, so a consumer can tell a rate from a gauge.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "additionalProperties": false
+}

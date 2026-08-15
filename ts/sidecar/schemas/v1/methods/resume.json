@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/resume.json",
+  "title": "resume",
+  "description": "Replay buffered pushes after a reconnect (spec §10).\n\nThe caller states the last `seq` it actually received; the plugin re-sends everything newer from its ring buffer, then returns to live. The ring holds the last 1000 pushes and lives on the plugin, not on the connection — a per-connection buffer would have nothing to replay, which is the whole point.\n\nTwo failure modes the result exists to surface:\n\n`gap: true` — the requested position had already been overwritten, so some pushes are gone for good. The caller should re-sync with `discover` plus `readState` rather than pretend it has a complete picture.\n\n`seq` below the caller's `since_seq` — the plugin restarted and its counter went back to the beginning. The caller must clamp its expectation to this value instead of discarding every push as a duplicate, which is what it would otherwise do until the counter caught up.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["since_seq"],
+      "properties": {
+        "since_seq": {
+          "title": "Last seq the caller received",
+          "description": "0 means \"send everything you still have\".",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": ["resumed", "sending"],
+      "properties": {
+        "resumed": { "const": true },
+        "sending": {
+          "title": "Backlog size",
+          "description": "How many buffered pushes follow before live traffic resumes. 0 is normal — it means the caller was already current.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "seq": {
+          "title": "Sender position before this call",
+          "description": "The plugin's current counter. Present so the caller can detect a restart and clamp.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "gap": {
+          "title": "Whether pushes were lost",
+          "description": "True when `since_seq` fell off the back of the ring buffer.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

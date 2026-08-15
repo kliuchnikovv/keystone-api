@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/index.json",
+  "title": "Method inventory",
+  "description": "Machine-readable map of the v1 method surface (spec §7).\n\nThis is not a validation schema — it is data, consumed by tooling:\n- both runtimes build their params/result validation tables from it\n- the TypeScript generator emits the MethodMap type from it\n- a Go test walks it and fails if a method has no corresponding constant and struct pair\n\n`direction` records who initiates. Every v1 method is core-to-plugin except `hello`, which the plugin sends. The transport itself is symmetric — this field describes v1's usage, not a restriction of the wire format.",
+
+  "type": "object",
+
+  "methods": {
+    "hello": {
+      "params": { "$ref": "hello.json#/$defs/params" },
+      "result": { "$ref": "hello.json#/$defs/result" },
+      "direction": "plugin->core",
+      "group": "lifecycle"
+    },
+    "ping": {
+      "params": { "$ref": "ping.json#/$defs/params" },
+      "result": { "$ref": "ping.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "lifecycle"
+    },
+    "shutdown": {
+      "params": { "$ref": "shutdown.json#/$defs/params" },
+      "result": { "$ref": "shutdown.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "lifecycle"
+    },
+    "getHealth": {
+      "params": { "$ref": "getHealth.json#/$defs/params" },
+      "result": { "$ref": "getHealth.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "lifecycle"
+    },
+
+    "discover": {
+      "params": { "$ref": "discover.json#/$defs/params" },
+      "result": { "$ref": "discover.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+    "commission": {
+      "params": { "$ref": "commission.json#/$defs/params" },
+      "result": { "$ref": "commission.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+    "decommission": {
+      "params": { "$ref": "decommission.json#/$defs/params" },
+      "result": { "$ref": "decommission.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+    "readState": {
+      "params": { "$ref": "readState.json#/$defs/params" },
+      "result": { "$ref": "readState.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+    "writeState": {
+      "params": { "$ref": "writeState.json#/$defs/params" },
+      "result": { "$ref": "writeState.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+    "invokeAction": {
+      "params": { "$ref": "invokeAction.json#/$defs/params" },
+      "result": { "$ref": "invokeAction.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "device"
+    },
+
+    "subscribe": {
+      "params": { "$ref": "subscribe.json#/$defs/params" },
+      "result": { "$ref": "subscribe.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "subscription"
+    },
+    "unsubscribe": {
+      "params": { "$ref": "unsubscribe.json#/$defs/params" },
+      "result": { "$ref": "unsubscribe.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "subscription"
+    },
+    "resume": {
+      "params": { "$ref": "resume.json#/$defs/params" },
+      "result": { "$ref": "resume.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "subscription"
+    },
+
+    "configFlow": {
+      "params": { "$ref": "configFlow.json#/$defs/params" },
+      "result": { "$ref": "configFlow.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "config",
+      "capability": "config.flow"
+    },
+    "getConfig": {
+      "params": { "$ref": "getConfig.json#/$defs/params" },
+      "result": { "$ref": "getConfig.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "config"
+    },
+    "setConfig": {
+      "params": { "$ref": "setConfig.json#/$defs/params" },
+      "result": { "$ref": "setConfig.json#/$defs/result" },
+      "direction": "core->plugin",
+      "group": "config"
+    }
+  }
+}

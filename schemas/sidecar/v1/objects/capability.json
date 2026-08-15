@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/objects/capability.json",
+  "title": "Capability registry",
+  "description": "Dotted capability ids advertised in the `hello` handshake.\n\nThis is the same vocabulary as `spec.capabilities` in plugin.yaml — keystone's manifest schema describes its own field as \"identical to the sidecar v1 hello handshake\". Keeping one definition means the manifest and the handshake cannot drift: a plugin that declares a capability it does not implement fails at install time rather than at 3am.\n\nThe pattern is authoritative and the enum is advisory, for the same reason as error codes: a plugin may advertise capabilities the core has never heard of, and the core simply will not use them.",
+
+  "$defs": {
+    "capabilityId": {
+      "description": "One dotted capability identifier. The pattern is shared verbatim with plugin.yaml's `spec.capabilities`.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(\\.[a-z0-9][a-z0-9-]*)+$",
+      "maxLength": 64
+    },
+
+    "wellKnown": {
+      "description": "Capabilities the core knows how to take advantage of.\n\n`realtime.state-stream` — the plugin pushes state changes as they happen rather than requiring polling.\n`discover.devices` — `discover` returns devices already usable by this transport.\n`discover.commissionable` — the plugin can find devices not yet paired to anything. Backs keystone's optional CommissionableDiscoverer port.\n`commission.setup-code` — pairing accepts a typed setup code.\n`commission.qr-code` — pairing accepts a scanned QR payload.\n`commission.permit-join` — pairing is a mode rather than a per-device operation (Zigbee-style).\n`camera.webrtc` — the plugin can broker WebRTC signalling for a camera. Backs keystone's optional CameraStreamer port. Signalling only: no media crosses the protocol.\n`config.flow` — the plugin implements the `configFlow` wizard rather than only a flat config object.\n`config.reload` — `setConfig` is applied without a restart.\n`health.detailed` — `getHealth` returns per-component counters, not just an overall status.",
+      "enum": [
+        "realtime.state-stream",
+        "discover.devices",
+        "discover.commissionable",
+        "commission.setup-code",
+        "commission.qr-code",
+        "commission.permit-join",
+        "camera.webrtc",
+        "config.flow",
+        "config.reload",
+        "health.detailed"
+      ]
+    },
+
+    "capabilityList": {
+      "description": "What a plugin advertises in `hello`. Unknown ids are legal and simply unused by the core.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/capabilityId" }
+    },
+
+    "coreFeature": {
+      "title": "Core-side feature",
+      "description": "Advertised by the core in the hello response — what the core itself supports.\n\n`seq.replay` — the core tracks `seq` and will call `resume` after a reconnect. A plugin that sees this must keep its ring buffer.\n`topic.filtering` — the core sends `subscribe` filters; a plugin that sees this may drop unmatched pushes before numbering them.",
+      "enum": ["seq.replay", "topic.filtering"]
+    },
+
+    "coreFeatureList": {
+      "description": "What the core advertises back in the hello response. Closed enum, unlike plugin capabilities: a plugin must not have to guess what an unknown core feature implies about its own obligations.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/coreFeature" }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/ping.json",
+  "title": "ping",
+  "description": "Heartbeat (spec §6.1). Sent by the core every 10 seconds; the plugin must answer within 30 seconds or the core closes the socket and applies the restart policy.\n\nOver AF_UNIX a dead process usually EOFs on its own, so this mostly catches the harder case: a process that is alive, holds the socket open, and has stopped making progress. A blocking read cannot tell that apart from an idle house.",
+
+  "$defs": {
+    "params": { "type": "object", "additionalProperties": false },
+    "result": {
+      "type": "object",
+      "required": ["pong"],
+      "properties": { "pong": { "const": true } },
+      "additionalProperties": false
+    }
+  }
+}

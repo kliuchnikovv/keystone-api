@@ -1,0 +1,1 @@
+{"type":"request","id":"4","method":"invokeAction","params":{"deviceRef":"matter:2","feature":"onoff","action":"turn_off"}}

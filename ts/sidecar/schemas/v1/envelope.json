@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/envelope.json",
+  "title": "Frame",
+  "description": "Any single message on the wire. One NDJSON line is exactly one frame.\n\nThis is the schema to validate raw inbound bytes against; the per-method and per-topic payload schemas are a second, optional layer applied after routing.",
+  "type": "object",
+  "required": ["type"],
+  "properties": {
+    "type": {
+      "title": "Frame discriminator",
+      "enum": ["request", "response", "push"]
+    }
+  },
+  "oneOf": [
+    { "$ref": "request.json" },
+    { "$ref": "response.json" },
+    { "$ref": "push.json" }
+  ]
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+bin/
+coverage.out
+*.log
+.DS_Store
+
+# core/: generated protobuf stubs — regenerate with `make proto`.
+core/gen/

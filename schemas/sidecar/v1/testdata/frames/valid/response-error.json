@@ -1,0 +1,1 @@
+{"type":"response","id":"5","error":{"code":"device.not_found","message":"Node 3 not found in fabric","retryable":false,"details":{"nodeId":"3"}}}

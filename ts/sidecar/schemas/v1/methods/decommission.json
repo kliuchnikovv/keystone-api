@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/decommission.json",
+  "title": "decommission",
+  "description": "Remove a device from the transport.\n\nSucceeds if the device ends up gone, including when it was already gone — the core retries on transport errors and a second attempt must not fail with `device.not_found`.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["deviceRef"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "force": {
+          "description": "Drop local state even if the device cannot be reached to be told. Leaves the device believing it is still paired, so the UI should say so.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": { "type": "object", "additionalProperties": false }
+  }
+}

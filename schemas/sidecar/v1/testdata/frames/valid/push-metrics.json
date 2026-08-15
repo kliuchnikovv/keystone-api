@@ -1,0 +1,1 @@
+{"type":"push","topic":"plugin.metrics","seq":9,"ts":"2026-08-15T21:04:18.000Z","payload":{"metrics":{"pushes_dropped":0,"queue_depth":2},"intervalSeconds":30}}

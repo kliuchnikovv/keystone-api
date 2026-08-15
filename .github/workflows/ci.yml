@@ -1,0 +1,116 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# GOWORK=off everywhere. go.work would silently satisfy imports missing from a
+# module's go.mod, and we would only find out when a consumer runs `go get`.
+env:
+  GOWORK: "off"
+
+jobs:
+  schemas:
+    name: schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: make lint-schemas
+
+  verify-gen:
+    name: verify-gen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: make verify-gen
+
+  go:
+    name: go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - run: go build ./...
+        working-directory: sidecar
+      - run: go vet ./...
+        working-directory: sidecar
+      - uses: dominikh/staticcheck-action@v1
+        with:
+          working-directory: sidecar
+          install-go: false
+      # -count=2 defeats the test cache and shakes out state leaking between
+      # runs of the same test — this suite is full of goroutines and timers.
+      - run: go test -race -count=2 ./...
+        working-directory: sidecar
+
+  ts:
+    name: typescript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+
+  conformance:
+    name: conformance
+    runs-on: ubuntu-latest
+    needs: [go, ts]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: make conformance
+
+  fuzz-smoke:
+    name: fuzz-smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - run: go test -run='^$' -fuzz=FuzzDecode -fuzztime=60s .
+        working-directory: sidecar
+
+  proto:
+    name: proto
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: bufbuild/buf-setup-action@v1
+      - run: buf lint
+        working-directory: core
+      - run: buf breaking --against '../.git#branch=main,subdir=core'
+        working-directory: core
+        continue-on-error: ${{ github.ref == 'refs/heads/main' }}

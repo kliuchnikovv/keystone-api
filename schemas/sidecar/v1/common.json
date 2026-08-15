@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/common.json",
+  "title": "Common definitions",
+  "description": "Shared scalar types referenced across the sidecar protocol v1 schemas.",
+
+  "$defs": {
+    "segment": {
+      "title": "Topic segment",
+      "description": "One dot-separated component of a topic name.\n\nTopics are dot-separated (spec §8.1) and every well-known topic shape assumes each interpolated value occupies exactly one segment. A value containing a dot would silently shift every following segment and break `*` matching — `state.*.*.*` would stop matching a device whose ref contains a dot, with no error anywhere. So no segment may contain `.`, whitespace, or the wildcard characters.\n\nIdentifiers that are naturally dotted must substitute another separator when crossing the wire. Keystone's own convention for vendor-prefixed feature keys is `aqara.vibration` in Go; on the wire that becomes `aqara:vibration`.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 190,
+      "pattern": "^[^.\\s*]+$"
+    },
+
+    "deviceRef": {
+      "title": "Device reference",
+      "description": "Opaque, plugin-scoped identifier for a device. The plugin mints it and the core treats it as a token — the only structural requirement is that it is a single topic segment.\n\nA `<transport>:<id>` shape such as `matter:3` is conventional and recommended, but not required: the core already knows which plugin a connection belongs to, so an unprefixed id is unambiguous.",
+      "$ref": "#/$defs/segment",
+      "examples": ["matter:3", "zigbee:0x00158d0001a2b3c4", "17"]
+    },
+
+    "featureKey": {
+      "title": "Feature key",
+      "description": "Functional module of a device — `onoff`, `brightness`, `thermostat`. Vendor extensions use a colon: `aqara:vibration`. See keystone's domain.FeatureKey for the standard set.",
+      "$ref": "#/$defs/segment"
+    },
+
+    "stateKey": {
+      "title": "State key",
+      "description": "Readable attribute within a feature — `value`, `level`, `setpoint`.",
+      "$ref": "#/$defs/segment"
+    },
+
+    "actionKey": {
+      "title": "Action key",
+      "description": "Imperative operation within a feature — `turn_on`, `lock`, `snapshot`.",
+      "$ref": "#/$defs/segment"
+    },
+
+    "eventKey": {
+      "title": "Event key",
+      "description": "Emitted event within a feature — `button_pressed`, `motion_detected`. Distinct from a state change: an event has no persistent value.",
+      "$ref": "#/$defs/segment"
+    },
+
+    "deviceType": {
+      "title": "Device type",
+      "description": "Coarse classification used for UI grouping and rule defaults.\n\nDeliberately an open string, not an enum: a plugin may report a type this version of the core has never heard of, and that must not be a protocol error. The well-known set is `light`, `switch`, `plug`, `sensor`, `motion_sensor`, `contact_sensor`, `thermostat`, `cover`, `lock`, `media_player`, `speaker`, `fan`, `air_purifier`, `button`, `alarm`, `appliance`, `vacuum`, `camera`, `doorbell`, `ev_charger`, `water_heater`, `valve`, `energy_meter`.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+
+    "topic": {
+      "title": "Topic",
+      "description": "Concrete, fully-qualified push topic. Contains no wildcards — see `topicFilter` for the subscription form.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[^.\\s*]+(\\.[^.\\s*]+)*$",
+      "examples": [
+        "state.matter:3.onoff.value",
+        "lifecycle.matter:3.offline",
+        "plugin.log.error"
+      ]
+    },
+
+    "topicFilter": {
+      "title": "Topic filter",
+      "description": "Subscription pattern over topics (spec §8.2).\n\n- `*` matches exactly one segment\n- `**` matches one or more trailing segments and may only appear last\n- anything else is a case-sensitive literal\n\nNote that `**` matches *one or more*, not zero or more: `state.**` matches `state.matter:3.onoff.value` but does not match the bare topic `state`.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^([^.\\s]+\\.)*([^.\\s]+|\\*\\*)$",
+      "examples": ["state.**", "event.matter:3.*", "plugin.log.error"]
+    },
+
+    "seq": {
+      "title": "Push sequence number",
+      "description": "Monotonically increasing counter, per sender, starting at 1 and incrementing by exactly 1 for every push actually written (spec §4.3).\n\nCapped at 2^53-1 rather than 2^64-1 so the value survives a round-trip through a JavaScript `number` without precision loss. A plugin emitting 10,000 pushes per second would reach the ceiling in roughly 28,000 years, so the cap costs nothing and putting `seq` on the wire as a string or a BigInt would cost readability.",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+
+    "isoTime": {
+      "title": "Timestamp",
+      "description": "RFC 3339 / ISO 8601 instant in UTC with exactly three fractional digits, e.g. `2026-08-15T21:04:11.123Z`.\n\nThe fixed precision is not cosmetic. Go's time.Time marshals RFC3339Nano with variable precision while JavaScript's toISOString always emits three digits, so without pinning it the two implementations produce different bytes for the same instant and every golden fixture diverges.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+    },
+
+    "semver": {
+      "title": "Semantic version",
+      "description": "Informational only — used in logs and user-facing UI. Compatibility is decided by the `protocol` field, never by this.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+    },
+
+    "protocolVersion": {
+      "title": "Protocol major version",
+      "description": "Major version of the sidecar protocol. Incompatible changes bump this; within one major only backward-compatible additions are permitted (spec §5.2).",
+      "type": "string",
+      "pattern": "^v[1-9][0-9]*$"
+    },
+
+    "pluginName": {
+      "title": "Plugin slug",
+      "description": "Identifier of the plugin, matching the `metadata.name` of its plugin.yaml manifest.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,38}[a-z0-9]$"
+    },
+
+    "origin": {
+      "title": "State change origin",
+      "description": "What caused a state value to be reported.\n\n`device_report` — the device told us, unprompted or via subscription.\n`user_write` — echo of a write this core issued.\n`adapter_derived` — the plugin computed it rather than reading it.",
+      "enum": ["device_report", "user_write", "adapter_derived"]
+    },
+
+    "errorCode": {
+      "title": "Error code",
+      "description": "Dotted `namespace.identifier`. The standard taxonomy in §9.1 is listed for tooling and autocomplete, but the pattern is authoritative: a plugin may mint codes in its own namespace and the receiver must not reject them.",
+      "type": "string",
+      "anyOf": [
+        {
+          "enum": [
+            "protocol.unsupported",
+            "protocol.malformed",
+            "device.not_found",
+            "device.offline",
+            "device.unsupported",
+            "feature.unsupported",
+            "plugin.not_ready",
+            "plugin.busy",
+            "plugin.internal",
+            "auth.invalid_credentials",
+            "auth.expired",
+            "network.timeout",
+            "network.unavailable",
+            "permission.denied",
+            "validation.bad_params"
+          ]
+        },
+        {
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+        }
+      ]
+    },
+
+    "requestId": {
+      "title": "Request id",
+      "description": "Unique within a session and within the sending direction. A ULID is conventional; any unique string is legal (spec §4.1).",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    }
+  }
+}

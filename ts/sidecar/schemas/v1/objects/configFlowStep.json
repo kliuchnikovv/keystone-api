@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/objects/configFlowStep.json",
+  "title": "Config flow step",
+  "description": "One screen of a setup wizard, returned by `configFlow` (spec §7.4, plugin-ui-integration.md §4).\n\nThe plugin drives the flow and the core renders it: the core holds the session state between steps, renders whatever the current step describes, and passes the user's input back on the next call. A plugin never draws anything — that is the whole point of the layer.\n\nDiscriminated on `type`. Nine kinds; every one carries `title` and may carry `next`.",
+
+  "$defs": {
+    "base": {
+      "description": "Fields every step kind carries, regardless of type.",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": [
+            "form",
+            "oauth",
+            "qr-scan",
+            "progress",
+            "confirm",
+            "pick-device",
+            "manual-action",
+            "error",
+            "complete"
+          ]
+        },
+        "title": { "type": "string", "maxLength": 256 },
+        "description": { "type": "string", "maxLength": 4096 },
+        "next": {
+          "title": "Next step id",
+          "description": "What the core should pass as `step` when the user advances. Absent on terminal steps (`complete`, and `error` without a retry).",
+          "type": "string",
+          "maxLength": 64
+        }
+      }
+    },
+
+    "sessionId": {
+      "title": "Config flow session id",
+      "description": "Identifies this wizard run. Appears in `commissioning.<sessionId>.progress` push topics so a `progress` step can be animated live.",
+      "$ref": "../common.json#/$defs/segment"
+    },
+
+    "step": {
+      "description": "A complete step: the common fields plus exactly one type-specific branch.",
+      "allOf": [{ "$ref": "#/$defs/base" }],
+      "unevaluatedProperties": false,
+      "oneOf": [
+        {
+          "title": "form",
+          "description": "Renders a JSON Schema as a form — the same renderer as a plugin's flat config screen.",
+          "properties": {
+            "type": { "const": "form" },
+            "schema": {
+              "title": "JSON Schema for the fields",
+              "type": "object"
+            },
+            "uiHints": {
+              "title": "Per-field rendering hints",
+              "description": "Widget overrides keyed by field name — `password`, `textarea`, `select`. Advisory: a renderer that does not know a hint falls back to the type.",
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            },
+            "defaults": { "type": "object" }
+          },
+          "required": ["schema"]
+        },
+        {
+          "title": "oauth",
+          "description": "Core opens the provider in a new window and catches the callback.",
+          "properties": {
+            "type": { "const": "oauth" },
+            "authUrl": { "type": "string", "format": "uri" },
+            "callbackPath": {
+              "title": "Path the core should listen on",
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          "required": ["authUrl"]
+        },
+        {
+          "title": "qr-scan",
+          "description": "Core opens its QR scanner and returns the decoded string.",
+          "properties": {
+            "type": { "const": "qr-scan" },
+            "hint": { "type": "string", "maxLength": 512 },
+            "allowManualEntry": {
+              "description": "Whether the user may type the payload instead. True for Matter setup codes, which are printed as digits as well as a QR.",
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "title": "progress",
+          "description": "Progress bar driven by `commissioning.<sessionId>.progress` pushes. The core advances to `next` when the plugin reports completion.",
+          "properties": {
+            "type": { "const": "progress" },
+            "sessionId": { "$ref": "#/$defs/sessionId" },
+            "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+            "message": { "type": "string", "maxLength": 512 },
+            "cancellable": { "type": "boolean" }
+          },
+          "required": ["sessionId"]
+        },
+        {
+          "title": "confirm",
+          "description": "Accept / decline screen.",
+          "properties": {
+            "type": { "const": "confirm" },
+            "confirmLabel": { "type": "string", "maxLength": 64 },
+            "cancelLabel": { "type": "string", "maxLength": 64 }
+          }
+        },
+        {
+          "title": "pick-device",
+          "description": "Multi-select over devices the plugin has found — pairing several at once.",
+          "properties": {
+            "type": { "const": "pick-device" },
+            "devices": {
+              "type": "array",
+              "items": { "$ref": "device.json#/$defs/commissionableDevice" }
+            },
+            "multiple": { "type": "boolean" }
+          },
+          "required": ["devices"]
+        },
+        {
+          "title": "manual-action",
+          "description": "Instruction plus a done button — \"press the button on the device, then confirm\".",
+          "properties": {
+            "type": { "const": "manual-action" },
+            "instruction": { "type": "string", "maxLength": 4096 },
+            "imageUrl": { "type": "string", "format": "uri" }
+          },
+          "required": ["instruction"]
+        },
+        {
+          "title": "error",
+          "description": "Terminal unless `retryStep` is set, in which case the core offers to go back to it.",
+          "properties": {
+            "type": { "const": "error" },
+            "error": { "$ref": "../error.json" },
+            "retryStep": { "type": "string", "maxLength": 64 }
+          },
+          "required": ["error"]
+        },
+        {
+          "title": "complete",
+          "description": "Terminal success.",
+          "properties": {
+            "type": { "const": "complete" },
+            "message": { "type": "string", "maxLength": 4096 },
+            "deviceRefs": {
+              "title": "Devices this flow produced",
+              "description": "Lets the core jump straight to what was just added.",
+              "type": "array",
+              "items": { "$ref": "../common.json#/$defs/deviceRef" }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

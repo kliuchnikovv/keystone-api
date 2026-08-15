@@ -1,0 +1,14 @@
+// Local development convenience only.
+//
+// Every CI job MUST run with GOWORK=off. A workspace silently satisfies
+// imports that are missing from a module's go.mod, so a green build here says
+// nothing about whether `go get` works for a consumer.
+//
+// While migrating keystone's matter adapter onto this protocol it is useful to
+// add `../keystone` to the `use` block locally. Do not commit that line.
+go 1.23
+
+use (
+	./core
+	./sidecar
+)

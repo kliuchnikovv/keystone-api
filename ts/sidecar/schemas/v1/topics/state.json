@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/state.json",
+  "title": "state.<deviceRef>.<feature>.<stateKey>",
+  "description": "An attribute changed (spec §8.3).\n\nThe highest-volume topic by a wide margin — an energy meter can produce one per second per device. Plugins may coalesce repeated values for the same attribute rather than pushing every sample; if they do, they should report `degraded` via plugin.health when the drop rate is high enough to matter (spec §11).",
+  "$ref": "../objects/device.json#/$defs/stateValue"
+}

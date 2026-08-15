@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/readState.json",
+  "title": "readState",
+  "description": "Read one attribute.\n\nOne round-trip per attribute. Over a unix socket that is cheap, but a rule reading twenty attributes off one device pays for twenty — see OPEN_QUESTIONS.md §3 on whether a batch form is worth adding.",
+
+  "$defs": {
+    "params": { "$ref": "../objects/device.json#/$defs/attrRef" },
+    "result": { "$ref": "../objects/device.json#/$defs/stateValue" }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/response.json",
+  "title": "Response frame",
+  "description": "Exactly one per request, matched by `id` (spec §4.2).\n\nExactly one of `result` / `error` is present. A response carrying both, or neither, is malformed — the `oneOf` below is what enforces that, since JSON Schema has no direct way to say \"exactly one of these keys\".",
+  "type": "object",
+  "required": ["type", "id"],
+  "properties": {
+    "type": { "const": "response" },
+    "id": { "$ref": "common.json#/$defs/requestId" },
+    "result": {
+      "title": "Success payload",
+      "description": "Shape is determined by the method of the originating request. `null` is a legal result and is distinct from an absent one."
+    },
+    "error": { "$ref": "error.json" }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    { "required": ["result"], "properties": { "result": true } },
+    { "required": ["error"], "properties": { "error": true } }
+  ]
+}

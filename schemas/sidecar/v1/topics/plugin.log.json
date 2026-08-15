@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/plugin.log.json",
+  "title": "plugin.log.<level>",
+  "description": "A structured log entry, forwarded so the core can show plugin logs in its own UI without tailing files.\n\nThe level is in the topic rather than the payload so a core can subscribe to `plugin.log.error` alone and not pay for debug traffic it would discard.",
+  "type": "object",
+  "required": ["message"],
+  "properties": {
+    "message": { "type": "string", "maxLength": 8192 },
+    "fields": {
+      "title": "Structured context",
+      "type": "object"
+    },
+    "logger": {
+      "title": "Component that emitted it",
+      "type": "string",
+      "maxLength": 128
+    }
+  },
+  "additionalProperties": false
+}

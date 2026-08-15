@@ -1,0 +1,1 @@
+{"type":"response","id":"01HKQZ0000000000000000001","result":{"protocol":"v1","core":"0.5.2","session":"sess_abc","features":["seq.replay","topic.filtering"]}}

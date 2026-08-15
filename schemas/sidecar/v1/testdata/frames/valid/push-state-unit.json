@@ -1,0 +1,1 @@
+{"type":"push","topic":"state.matter:7.temperature.value","seq":3,"ts":"2026-08-15T21:04:12.000Z","payload":{"value":21.5,"unit":"celsius","origin":"device_report","confidence":0.98}}

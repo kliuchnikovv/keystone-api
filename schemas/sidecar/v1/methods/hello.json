@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/hello.json",
+  "title": "hello",
+  "description": "Handshake. Must be the first message on a connection; any other method before it is answered with `protocol.unsupported` (spec §5).\n\nIn v1 the plugin sends `hello` and the core answers — see OPEN_QUESTIONS.md §7 for why that direction and not the other.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["protocol", "plugin", "version"],
+      "properties": {
+        "protocol": { "$ref": "../common.json#/$defs/protocolVersion" },
+        "plugin": { "$ref": "../common.json#/$defs/pluginName" },
+        "version": {
+          "$ref": "../common.json#/$defs/semver",
+          "description": "The plugin's own version. Informational — compatibility is decided by `protocol` alone."
+        },
+        "capabilities": { "$ref": "../objects/capability.json#/$defs/capabilityList" }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": ["protocol", "core", "session"],
+      "properties": {
+        "protocol": { "$ref": "../common.json#/$defs/protocolVersion" },
+        "core": { "$ref": "../common.json#/$defs/semver" },
+        "session": {
+          "title": "Session id",
+          "description": "New on every connection, including reconnects. Useful for correlating both sides' logs across a drop.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "features": { "$ref": "../objects/capability.json#/$defs/coreFeatureList" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

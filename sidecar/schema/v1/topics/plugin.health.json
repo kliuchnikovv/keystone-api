@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/topics/plugin.health.json",
+  "title": "plugin.health.<component>",
+  "description": "The plugin reporting its own condition, unprompted. Same shape as the `getHealth` result — one definition, so a poll and a push cannot disagree.\n\nThis is what lets a subscriber tell a quiet house from a dead plugin. Both look like an idle stream otherwise, and that ambiguity has bitten this project before: keystone's TransportEventAdapterStatus exists for exactly this reason.",
+  "$ref": "../objects/health.json"
+}

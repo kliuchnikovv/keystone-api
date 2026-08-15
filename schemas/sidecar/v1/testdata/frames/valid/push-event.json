@@ -1,0 +1,1 @@
+{"type":"push","topic":"event.matter:5.motion_detected","seq":4,"ts":"2026-08-15T21:04:13.500Z","payload":{"data":{"zone":"hallway"},"feature":"motion"}}

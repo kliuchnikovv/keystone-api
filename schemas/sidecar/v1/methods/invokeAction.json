@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keystone.io/schemas/sidecar/v1/methods/invokeAction.json",
+  "title": "invokeAction",
+  "description": "Run a command against a feature — `turn_on`, `lock`, `snapshot`.\n\nActions are imperative and may have no corresponding state. Most return an empty object; those that produce something (a snapshot, a mode list) return it under `data`.",
+
+  "$defs": {
+    "params": {
+      "type": "object",
+      "required": ["deviceRef", "feature", "action"],
+      "properties": {
+        "deviceRef": { "$ref": "../common.json#/$defs/deviceRef" },
+        "feature": { "$ref": "../common.json#/$defs/featureKey" },
+        "action": { "$ref": "../common.json#/$defs/actionKey" },
+        "params": {
+          "title": "Action arguments",
+          "description": "Shape is action-specific — `move` carries pan/tilt/zoom axes, `set` carries the value.",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "data": { "description": "Action-specific return value. Absent for actions that only have an effect." }
+      },
+      "additionalProperties": false
+    }
+  }
+}
